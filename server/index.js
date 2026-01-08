@@ -37,6 +37,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://pizza-delight-lilac.vercel.app',
   'https://pizza-delight-git-main-zeel-sadariyas-projects.vercel.app',
+  'https://pizza-delight-je00djqxs-zeel-sadariyas-projects.vercel.app',
 ];
 
 app.use(
@@ -51,6 +52,7 @@ app.use(
     credentials: true,
   })
 );
+app.options('*', cors());
 
 // Parse incoming JSON data
 app.use(express.json());
