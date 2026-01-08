@@ -1,0 +1,76 @@
+zeel 
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUyZmM3Y2YyMGU1NjlkMDA3MjEyMyIsImlhdCI6MTc2Nzc4MDI5NSwiZXhwIjoxNzY5MDc2Mjk1fQ.srFJKuuqyLKxWmkWA0MCYeRDKoCnejImJU9ePUtsgA4
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUyZmM3Y2YyMGU1NjlkMDA3MjEyMyIsImlhdCI6MTc2Nzc4MDQ0NCwiZXhwIjoxNzY5MDc2NDQ0fQ.KKbT3byLg87dVMox9PUeD4b6qLV77OgG-q-fEuvK2ss
+
+
+{
+  "name": "Zeel Sadariya",
+  "email": "zeelsadariya@gmail.com",
+  "password": "admin123",
+  "role": "superadmin",
+  "permissions": ["ALL"],
+  "isApproved": true, 
+}
+
+admin token 
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUzYWU1MjgxYzdkZTQ2YjViOGU3NyIsImlhdCI6MTc2Nzc4MzI0NCwiZXhwIjoxNzY5MDc5MjQ0fQ.FK0f_8NJoWHbswSyX_8BXfpNKXgANKa7jtbMrNAxJ9s
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUzYWU1MjgxYzdkZTQ2YjViOGU3NyIsImlhdCI6MTc2Nzc5MTcyMywiZXhwIjoxNzY5MDg3NzIzfQ.fQ_fA1WU0s4PHvERRpsZ6neL04ne4NRBPsaA1iZSjz8
+
+
+{
+  "name": "Margherita",
+  "description": "Classic cheese pizza",
+  "bases": ["695e605d3095d47cbb34d72a"],
+  "sauces": ["66c1a20ab1e3c9a987654321"],
+  "cheeses": ["66c1a230b1e3c9a111222333"],
+  "veggies": ["66c1a245b1e3c9a444555666"],
+  "price": 199,
+  "size": "medium",
+  "imageUrl": "/images/margherita.png"
+}
+
+bases:
+Thin Crust 695e605d3095d47cbb34d72a
+Cheese Burst 695e61633095d47cbb34d72e
+Classic Hand Tossed 695e622c3095d47cbb34d732
+Whole Wheat Crust 695e62593095d47cbb34d736
+Pan Pizza Crust 695e62713095d47cbb34d73a
+
+sauces:
+Tomato Sauce 695e63b23095d47cbb34d752
+Classic Marinara 695e63bf3095d47cbb34d756
+Barbeque 695e63cf3095d47cbb34d75a
+Pesto 695e63dd3095d47cbb34d75e
+Spicy Peri Peri 695e63e83095d47cbb34d762
+
+cheeses:
+Mozzarella 695e63163095d47cbb34d73e
+Cheddar 695e632b3095d47cbb34d742
+Parmesan 695e633c3095d47cbb34d746
+Provolone 695e634b3095d47cbb34d74a
+Four Cheese Blend 695e635b3095d47cbb34d74e
+
+veggies:
+Onion 695e64003095d47cbb34d766
+Capsicum 695e640e3095d47cbb34d76a
+Tomato 695e64233095d47cbb34d76e
+Black Olives 695e64343095d47cbb34d772
+Sweet Corn 695e644c3095d47cbb34d776
+Jalapeno 695e64613095d47cbb34d77a
+Mushroom 695e64723095d47cbb34d77e
+
+{
+  "name": "Margherita",
+  "description": "Classic cheese pizza",
+  "bases": ["695e605d3095d47cbb34d72a"],
+  "sauces": ["695e63b23095d47cbb34d752"],
+  "cheeses": ["695e63163095d47cbb34d73e"],
+  "veggies": [],
+  "price": 199,
+  "size": "medium",
+  "imageUrl": "/images/margherita.png"
+}
