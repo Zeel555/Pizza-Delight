@@ -33,7 +33,24 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Enable Cross-Origin Resource Sharing
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://pizza-delight-lilac.vercel.app',
+  'https://pizza-delight-git-main-zeel-sadariyas-projects.vercel.app',
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS not allowed'));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // Parse incoming JSON data
 app.use(express.json());
