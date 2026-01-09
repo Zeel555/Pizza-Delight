@@ -1,25 +1,19 @@
-const nodemailer = require('nodemailer');
-const sendMail = require('../utils/sendMail');
+const sendEmail = require('../middlewares/nodemailerMiddleware');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SENDER_EMAIL,
-    pass: process.env.SENDER_PASSWORD,
-  },
-});
-
-const sendMail = async (to, subject, html) => {
-  const mailOptions = {
+/**
+ * Reusable email helper
+ * @param {string} to - receiver email
+ * @param {string} subject - email subject
+ * @param {string} text - plain text body
+ * @returns {boolean} success/failure
+ */
+const sendMail = async (to, subject, text) => {
+  return await sendEmail({
     from: process.env.SENDER_EMAIL,
     to,
     subject,
-    html,
-  };
-
-  await transporter.sendMail(mailOptions);
+    text,
+  });
 };
-
-await sendMail(user.email, 'Subject', '<b>Your HTML message</b>');
 
 module.exports = sendMail;
