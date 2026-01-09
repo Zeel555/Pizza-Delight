@@ -1,20 +1,27 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
   auth: {
-    user: process.env.SENDER_EMAIL,
-    pass: process.env.SENDER_PASSWORD, // Gmail App Password
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
+});
+
+transporter.verify((err) => {
+  if (err) console.log("❌ SMTP ERROR:", err);
+  else console.log("✅ Brevo SMTP Ready");
 });
 
 const sendEmail = async (mailOptions) => {
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent:', info.response);
+    await transporter.sendMail(mailOptions);
+    console.log("📩 Email sent");
     return true;
   } catch (error) {
-    console.error('❌ Email error:', error.message);
+    console.error("❌ Email failed:", error.message);
     return false;
   }
 };
