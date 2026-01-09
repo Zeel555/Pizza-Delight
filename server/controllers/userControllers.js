@@ -2,16 +2,18 @@ const bcrypt = require('bcryptjs');
 const emailValidator = require('email-validator');
 const asyncHandler = require('express-async-handler');
 
-// Import Utils
+// Utils
 const generateToken = require('../utils/generateToken');
 
-// Import Middlewares
+// Email
 const sendEmail = require('../middlewares/nodemailerMiddleware');
 
-// Import Schema
+// Schema
 const User = require('../schemas/userSchema');
 
-// Function to generate a random 6-digit confirmation code thats not in users Schema already
+/**
+ * Generate unique 6-digit verification code
+ */
 const generateVerificationCode = async () => {
   let code;
   let user;
@@ -24,12 +26,11 @@ const generateVerificationCode = async () => {
   return code;
 };
 
-// Initialize Controllers
-
-// @desc    Auth user & get token
-// @route   POST /api/users/login
-// @access  Public
-
+/**
+ * @desc    Login user
+ * @route   POST /api/users/login
+ * @access  Public
+ */
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -50,9 +51,9 @@ const authUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid Email or Password!');
   }
 
-  const passwordsMatch = await bcrypt.compare(password, user.password);
+  const match = await bcrypt.compare(password, user.password);
 
-  if (!passwordsMatch) {
+  if (!match) {
     res.status(401);
     throw new Error('Invalid Email or Password!');
   }
@@ -70,15 +71,14 @@ const authUser = asyncHandler(async (req, res) => {
   });
 });
 
-
-// @desc    Register a new user
-// @route   POST /api/users/register
-// @access  Public
-
+/**
+ * @desc    Register user
+ * @route   POST /api/users/register
+ * @access  Public
+ */
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, confirmPassword, phoneNumber, address } = req.body;
 
-  // 1. Basic validation
   if (!name || !email || !password || !confirmPassword) {
     res.status(400);
     throw new Error('All Fields Are Required!');
@@ -89,8 +89,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid Email Address!');
   }
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
+  if (await User.findOne({ email })) {
     res.status(400);
     throw new Error('User Already Exists!');
   }
@@ -105,14 +104,10 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('Password Must Be At Least 8 Characters Long!');
   }
 
-  // 2. Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  // 3. Generate verification code
+  const hashedPassword = await bcrypt.hash(password, 10);
   const verificationCode = await generateVerificationCode();
 
-  // 4. CREATE USER FIRST (IMPORTANT)
+  // CREATE USER FIRST
   const user = await User.create({
     name,
     email,
@@ -123,26 +118,21 @@ const registerUser = asyncHandler(async (req, res) => {
     isVerified: false,
   });
 
-  // 5. TRY sending email (non-blocking)
-  try {
-    await sendEmail({
-      from: process.env.SENDER_EMAIL,
-      to: email,
-      subject: 'Please Confirm your Account!',
-      text: `Hey ${name},
+  // SEND EMAIL (NON-BLOCKING)
+  sendEmail({
+    from: process.env.SENDER_EMAIL,
+    to: email,
+    subject: 'Verify your Pizza Delight account',
+    text: `Hi ${name},
 
-Your account has been created successfully!
-
-Verification Code: ${verificationCode}
+Your verification code is: ${verificationCode}
 
 Thanks,
-Team Pizza Delight 🍕`,
-    });
-  } catch (error) {
-    console.error('⚠️ Email failed, user registered anyway');
-  }
+Pizza Delight 🍕`,
+  }).catch(() => {
+    console.log('⚠️ Verification email failed, user still registered');
+  });
 
-  // 6. Respond success
   res.status(201).json({
     _id: user._id,
     name: user.name,
@@ -156,222 +146,134 @@ Team Pizza Delight 🍕`,
   });
 });
 
-
-// @desc    Verify a user
-// @route   POST /api/users/verify
-// @access  Public
-
+/**
+ * @desc    Verify user
+ * @route   POST /api/users/verify
+ * @access  Public
+ */
 const verifyUser = asyncHandler(async (req, res) => {
   const { email, verificationCode } = req.body;
 
   if (!email || !verificationCode) {
     res.status(400);
     throw new Error('All Fields Are Required!');
-  } else {
-    if (emailValidator.validate(email)) {
-      const user = await User.findOne({ email });
-
-      if (user) {
-        if (user.verificationCode === verificationCode) {
-          user.isVerified = true;
-          user.verificationCode = null;
-
-          const verifiedUser = await user.save();
-
-          if (verifiedUser) {
-            res.status(200).json({
-              _id: verifiedUser._id,
-              name: verifiedUser.name,
-              email: verifiedUser.email,
-              phoneNumber: verifiedUser.phoneNumber,
-              address: verifiedUser.address,
-              orders: verifiedUser.orders,
-              isVerified: verifiedUser.isVerified,
-              token: generateToken(verifiedUser._id),
-              message: 'User Verified Successfully!',
-            });
-          } else {
-            res.status(400);
-            throw new Error('Error Verifying User!');
-          }
-        } else {
-          res.status(400);
-          throw new Error('Invalid Confirmation Code!');
-        }
-      } else {
-        res.status(400);
-        throw new Error('Invalid Email Address!');
-      }
-    } else {
-      res.status(400);
-      throw new Error('Invalid Email Address!');
-    }
   }
+
+  const user = await User.findOne({ email });
+
+  if (!user || user.verificationCode !== verificationCode) {
+    res.status(400);
+    throw new Error('Invalid Verification Code!');
+  }
+
+  user.isVerified = true;
+  user.verificationCode = null;
+  await user.save();
+
+  res.status(200).json({
+    message: 'User Verified Successfully!',
+  });
 });
 
-// @desc Forgot Password
-// @route POST /api/users/forgotpassword
-// @access Public
-
+/**
+ * @desc    Forgot password
+ * @route   POST /api/users/forgotpassword
+ * @access  Public
+ */
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
+  if (!email || !emailValidator.validate(email)) {
     res.status(400);
-    throw new Error('Email Address Is Required!');
-  } else {
-    if (emailValidator.validate(email)) {
-      const user = await User.findOne({ email });
-
-      if (user) {
-        // Generate a reset token
-        const resetToken = await generateVerificationCode();
-        user.resetPasswordToken = resetToken;
-        user.resetPasswordExpire = Date.now() + 600000; // 10 minutes
-
-        // Send the reset email
-        const emailSent = await sendEmail({
-          from: process.env.SENDER_EMAIL,
-          to: user.email,
-          subject: 'Password Reset Request',
-          text: `Please use the following code within the next 10 minutes to reset your password: ${resetToken}`,
-        });
-
-        if (emailSent) {
-          const resetUserPwd = await user.save();
-
-          if (resetUserPwd) {
-            res.status(200).json({
-              _id: resetUserPwd._id,
-              name: resetUserPwd.name,
-              email: resetUserPwd.email,
-              phoneNumber: resetUserPwd.phoneNumber,
-              address: resetUserPwd.address,
-              orders: resetUserPwd.orders,
-              isVerified: resetUserPwd.isVerified,
-              token: generateToken(resetUserPwd._id),
-              message: 'Password Reset Email Sent Successfully!',
-            });
-          } else {
-            res.status(400);
-            throw new Error('Error Updating User!');
-          }
-        } else {
-          res.status(400);
-          throw new Error('Error Sending Password Reset Email!');
-        }
-      } else {
-        res.status(400);
-        throw new Error('Invalid Email Address!');
-      }
-    } else {
-      res.status(400);
-      throw new Error('Invalid Email Address!');
-    }
+    throw new Error('Invalid Email Address!');
   }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User Not Found!');
+  }
+
+  const resetToken = await generateVerificationCode();
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  await user.save();
+
+  sendEmail({
+    from: process.env.SENDER_EMAIL,
+    to: email,
+    subject: 'Reset your Pizza Delight password',
+    text: `Your password reset code is: ${resetToken}`,
+  }).catch(() => {
+    console.log('⚠️ Reset email failed');
+  });
+
+  res.status(200).json({
+    message: 'Password reset code sent',
+  });
 });
 
-// @desc Reset Password
-// @route POST /api/users/resetpassword
-// @access Public
-
+/**
+ * @desc    Reset password
+ * @route   POST /api/users/resetpassword
+ * @access  Public
+ */
 const resetPassword = asyncHandler(async (req, res) => {
   const { email, resetToken, newPassword, confirmNewPassword } = req.body;
 
   if (!email || !resetToken || !newPassword || !confirmNewPassword) {
     res.status(400);
     throw new Error('All Fields Are Required!');
-  } else {
-    if (emailValidator.validate(email)) {
-      const user = await User.findOne({
-        email,
-      });
-
-      if (user) {
-        if (user.resetPasswordExpire > Date.now()) {
-          if (user.resetPasswordToken === resetToken) {
-            if (newPassword !== confirmNewPassword) {
-              res.status(400);
-              throw new Error('Passwords Do Not Match!');
-            } else {
-              if (newPassword.length < 8) {
-                res.status(400);
-                throw new Error('Password Must Be At Least 8 Characters Long!');
-              } else {
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-                user.password = hashedPassword;
-                user.resetPasswordToken = undefined;
-                user.resetPasswordExpire = undefined;
-
-                const updatedUser = await user.save();
-
-                if (updatedUser) {
-                  res.status(200).json({
-                    _id: updatedUser._id,
-                    name: updatedUser.name,
-                    email: updatedUser.email,
-                    phoneNumber: updatedUser.phoneNumber,
-                    address: updatedUser.address,
-                    orders: updatedUser.orders,
-                    isVerified: updatedUser.isVerified,
-                    token: generateToken(updatedUser._id),
-                    message: 'Password Reset Successful!',
-                  });
-                } else {
-                  res.status(400);
-                  throw new Error('Error Resetting Password!');
-                }
-              }
-            }
-          } else {
-            res.status(400);
-            throw new Error('Invalid Reset Token!');
-          }
-        } else {
-          res.status(400);
-          throw new Error('Reset Token Expired!');
-        }
-      } else {
-        res.status(404);
-        throw new Error('User Not Found!');
-      }
-    } else {
-      res.status(400);
-      throw new Error('Invalid Email Address!');
-    }
   }
+
+  const user = await User.findOne({ email });
+
+  if (
+    !user ||
+    user.resetPasswordToken !== resetToken ||
+    user.resetPasswordExpire < Date.now()
+  ) {
+    res.status(400);
+    throw new Error('Invalid or Expired Reset Token!');
+  }
+
+  if (newPassword !== confirmNewPassword || newPassword.length < 8) {
+    res.status(400);
+    throw new Error('Invalid Password!');
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.resetPasswordToken = null;
+  user.resetPasswordExpire = null;
+  await user.save();
+
+  res.status(200).json({
+    message: 'Password Reset Successful!',
+  });
 });
 
-// @desc    Get user profile
-// @route   GET /api/users/profile
-// @access  Private
-
+/**
+ * @desc    Get user profile
+ * @route   GET /api/users/profile
+ * @access  Private
+ */
 const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
-  if (user) {
-    res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      address: user.address,
-      orders: user.orders,
-      isVerified: user.isVerified,
-      message: 'User Profile Fetched Successfully!',
-    });
-  } else {
+  if (!user) {
     res.status(404);
     throw new Error('User Not Found!');
   }
+
+  res.json(user);
 });
 
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
-
+/**
+ * @desc    Update user profile
+ * @route   PUT /api/users/profile
+ * @access  Private
+ */
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -380,160 +282,37 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error('User Not Found!');
   }
 
-  let { name, email, phoneNumber, address, password, confirmPassword } =
-    req.body;
+  Object.assign(user, req.body);
+  await user.save();
 
-  // ✅ Normalize undefined values
-  password = password || '';
-  confirmPassword = confirmPassword || '';
-
-  // ✅ Validate email ONLY if provided
-  if (email && !emailValidator.validate(email)) {
-    res.status(400);
-    throw new Error('Invalid Email Address!');
-  }
-
-  // ✅ Detect no changes
-  const noChanges =
-    (!name || name === user.name) &&
-    (!email || email === user.email) &&
-    (!phoneNumber || phoneNumber === user.phoneNumber) &&
-    (!address || address === user.address) &&
-    password === '';
-
-  if (noChanges) {
-    res.status(400);
-    throw new Error('You Have Not Made Any Changes!');
-  }
-
-  // ✅ Password logic (only if user typed it)
-  if (password) {
-    if (password !== confirmPassword) {
-      res.status(400);
-      throw new Error('Passwords Do Not Match!');
-    }
-
-    if (password.length < 8) {
-      res.status(400);
-      throw new Error('Password Must Be At Least 8 Characters Long!');
-    }
-
-    const saltRounds = Number(process.env.SALT) || 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    user.password = await bcrypt.hash(password, salt);
-  }
-
-  // ✅ Update fields safely
-  if (name) user.name = name;
-  if (email) user.email = email;
-  if (phoneNumber) user.phoneNumber = phoneNumber;
-  if (address) user.address = address;
-
-  const updatedUser = await user.save();
-
-  res.status(200).json({
-    _id: updatedUser._id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    phoneNumber: updatedUser.phoneNumber,
-    address: updatedUser.address,
-    orders: updatedUser.orders,
-    isVerified: updatedUser.isVerified,
-    token: generateToken(updatedUser._id),
-    message: 'User Profile Updated Successfully!',
+  res.json({
+    message: 'Profile Updated Successfully!',
   });
 });
 
-// @desc    Get all Users
-// @route   GET /api/users
-// @access  Private/Admin
-
+/**
+ * ADMIN
+ */
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({});
-
-  if (users) {
-    res.status(200).json(users);
-  } else {
-    res.status(404);
-    throw new Error('Users Not Found!');
-  }
+  res.json(await User.find({}));
 });
-
-// @desc    Get User by ID
-// @route   GET /api/users/:id
-// @access  Private/Admin
 
 const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-
-  if (user) {
-    res.status(200).json(user);
-  } else {
-    res.status(404);
-    throw new Error('User Not Found!');
-  }
+  res.json(await User.findById(req.params.id));
 });
-
-// @desc    Update User By ID
-// @route   PUT /api/users/:id
-// @access  Private/Admin
 
 const updateUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-
-  if (user) {
-    let { name, email, phoneNumber, address } = req.body;
-
-    if (emailValidator.validate(email)) {
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.phoneNumber = phoneNumber || user.phoneNumber;
-      user.address = address || user.address;
-
-      const updatedUser = await user.save();
-
-      if (updatedUser) {
-        res.status(200).json({
-          _id: updatedUser._id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          phoneNumber: updatedUser.phoneNumber,
-          address: updatedUser.address,
-          orders: updatedUser.orders,
-          isVerified: updatedUser.isVerified,
-          token: generateToken(updatedUser._id),
-          message: 'User Updated Successfully!',
-        });
-      } else {
-        res.status(400);
-        throw new Error('Error Updating User!');
-      }
-    } else {
-      res.status(400);
-      throw new Error('Invalid Email Address!');
-    }
-  } else {
-    res.status(404);
-    throw new Error('User Not Found!');
-  }
+  res.json(await User.findByIdAndUpdate(req.params.id, req.body, { new: true }));
 });
-
-// @desc    Delete a User By Id
-// @route   DELETE /api/users/:id
-// @access  Private/Admin
 
 const deleteUserById = asyncHandler(async (req, res) => {
-  const user = await User.findByIdAndDelete(req.params.id);
-
-  if (user) {
-    res.status(200).json({ message: 'User Removed Successfully!' });
-  } else {
-    res.status(404);
-    throw new Error('User Not Found!');
-  }
+  await User.findByIdAndDelete(req.params.id);
+  res.json({ message: 'User Removed Successfully!' });
 });
 
-// Export Controllers
+/**
+ * EXPORTS (ALL KEPT)
+ */
 module.exports = {
   authUser,
   registerUser,
