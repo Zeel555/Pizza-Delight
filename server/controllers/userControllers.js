@@ -76,76 +76,86 @@ const authUser = asyncHandler(async (req, res) => {
 // @access  Public
 
 const registerUser = asyncHandler(async (req, res) => {
-  let { name, email, password, confirmPassword, phoneNumber, address } =
-    req.body;
+  const { name, email, password, confirmPassword, phoneNumber, address } = req.body;
 
+  // 1. Basic validation
   if (!name || !email || !password || !confirmPassword) {
     res.status(400);
     throw new Error('All Fields Are Required!');
-  } else {
-    if (emailValidator.validate(req.body.email)) {
-      let user = await User.findOne({ email: email });
-
-      if (user) {
-        res.status(400);
-        throw new Error('User Already Exists!');
-      } else {
-        if (password !== confirmPassword) {
-          res.status(400);
-          throw new Error('Passwords Do Not Match!');
-        } else {
-          if (password.length < 8) {
-            res.status(400);
-            throw new Error('Password Must Be At Least 8 Characters Long!');
-          } else {
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-
-            // Generate a verification token
-            const verificationCode = await generateVerificationCode();
-
-            // Send the verification email
-            const emailSent = await sendEmail({
-              from: process.env.SENDER_EMAIL,
-              to: email,
-              subject: 'Please Confirm your Account!',
-              text: `Hey ${name},\n\nAccount Successfully Created!\n\nPlease use the following code within the next 10 minutes to activate your account: ${verificationCode}\n\nThanks,\nTeam Pizza Palette.\n\nP.S. If you did not create an account, please ignore this email. `,
-            });
-
-            if (emailSent) {
-              user = await User.create({
-                name,
-                email,
-                password: hashedPassword,
-                phoneNumber,
-                address,
-                verificationCode,
-              });
-
-              res.status(200).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-                address: user.address,
-                orders: user.orders,
-                isVerified: user.isVerified,
-                token: generateToken(user._id),
-                message: 'User Registered Successfully!',
-              });
-            } else {
-              res.status(400);
-              throw new Error('Error Sending Confirmation Code!');
-            }
-          }
-        }
-      }
-    } else {
-      res.status(400);
-      throw new Error('Invalid Email Address!');
-    }
   }
+
+  if (!emailValidator.validate(email)) {
+    res.status(400);
+    throw new Error('Invalid Email Address!');
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    res.status(400);
+    throw new Error('User Already Exists!');
+  }
+
+  if (password !== confirmPassword) {
+    res.status(400);
+    throw new Error('Passwords Do Not Match!');
+  }
+
+  if (password.length < 8) {
+    res.status(400);
+    throw new Error('Password Must Be At Least 8 Characters Long!');
+  }
+
+  // 2. Hash password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  // 3. Generate verification code
+  const verificationCode = await generateVerificationCode();
+
+  // 4. CREATE USER FIRST (IMPORTANT)
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    phoneNumber,
+    address,
+    verificationCode,
+    isVerified: false,
+  });
+
+  // 5. TRY sending email (non-blocking)
+  try {
+    await sendEmail({
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: 'Please Confirm your Account!',
+      text: `Hey ${name},
+
+Your account has been created successfully!
+
+Verification Code: ${verificationCode}
+
+Thanks,
+Team Pizza Delight 🍕`,
+    });
+  } catch (error) {
+    console.error('⚠️ Email failed, user registered anyway');
+  }
+
+  // 6. Respond success
+  res.status(201).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    address: user.address,
+    orders: user.orders,
+    isVerified: user.isVerified,
+    token: generateToken(user._id),
+    message: 'User Registered Successfully!',
+  });
 });
+
 
 // @desc    Verify a user
 // @route   POST /api/users/verify
