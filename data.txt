@@ -1,76 +1,154 @@
-zeel 
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?logo=vercel)
+![Render](https://img.shields.io/badge/Backend-Render-blue?logo=render)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-green?logo=mongodb)
+![MERN](https://img.shields.io/badge/Stack-MERN-success)
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUyZmM3Y2YyMGU1NjlkMDA3MjEyMyIsImlhdCI6MTc2Nzc4MDI5NSwiZXhwIjoxNzY5MDc2Mjk1fQ.srFJKuuqyLKxWmkWA0MCYeRDKoCnejImJU9ePUtsgA4
+# 🍕 Pizza Delight – MERN Stack Pizza Ordering App
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUyZmM3Y2YyMGU1NjlkMDA3MjEyMyIsImlhdCI6MTc2Nzc4MDQ0NCwiZXhwIjoxNzY5MDc2NDQ0fQ.KKbT3byLg87dVMox9PUeD4b6qLV77OgG-q-fEuvK2ss
+Pizza Delight is a **full-stack MERN pizza ordering platform** that allows users to browse pizzas, place orders, track order status, and manage profiles, while admins manage products, users, and orders.
+
+🚀 **Live Frontend:** https://pizza-delight-lilac.vercel.app  
+⚙️ **Live Backend API:** https://pizza-delivery-mern.onrender.com  
+---
+
+## ✨ Features
+
+### 👤 User Features
+- User authentication (Register / Login with JWT)
+- Email verification & password reset
+- Browse pizza menu
+- Add items to cart
+- Place orders
+- Track order status
+- Update user profile
+- Secure checkout (Razorpay integration)
+
+### 🛠️ Admin Features
+- Admin authentication
+- Manage users
+- Manage pizzas
+- Manage orders
+- Order status updates
+- Role-based access control
+
+---
+
+## 🧰 Tech Stack
+
+### Frontend
+- **React (Vite)**
+- **Redux Toolkit**
+- **Tailwind CSS**
+- **React Router**
+- **Vercel (Deployment)**
+
+### Backend
+- **Node.js**
+- **Express.js**
+- **MongoDB + Mongoose**
+- **JWT Authentication**
+- **Bcrypt**
+- **Nodemailer**
+- **Render (Deployment)**
+
+---
+
+## 🌐 Project Architecture
+
+```text
+Pizza_Delight/
+│
+├── client/        # React Frontend (Vite)
+│   ├── src/
+│   ├── public/
+│   └── vercel.json
+│
+├── server/        # Node + Express Backend
+│   ├── controllers/
+│   ├── routes/
+│   ├── schemas/
+│   ├── middleware/
+│   └── index.js
+│
+└── README.md
+
+🔐 Environment Variables
+Backend (Render)
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+SALT=10
+NODE_ENV=production
+PORT=10000
+
+SENDER_EMAIL=your_email
+SENDER_PASSWORD=your_email_password
+SUPERADMIN_EMAIL=superadmin_email
+
+RAZORPAY_KEY_ID=your_key
+RAZORPAY_KEY_SECRET=your_secret
+
+Frontend (Vercel)
+VITE_SERVER_URL=https://pizza-delivery-mern.onrender.com
+
+🧪 API Endpoints (Sample)
+Auth
+
+POST /api/users/login
+
+POST /api/users/register
+
+POST /api/users/verify
+
+User
+
+GET /api/users/profile
+
+PUT /api/users/profile
+
+Orders
+
+POST /api/orders
+
+GET /api/orders/myorders
+
+🚀 Deployment
+Frontend (Vercel)
+cd client
+npm install
+npm run build
+
+Backend (Render)
+cd server
+npm install
+npm start
+
+🛡️ Security
+
+JWT-based authentication
+
+Password hashing using bcrypt
+
+Protected routes with middleware
+
+CORS configured for production
+
+📸 Screenshots
+
+Add screenshots here (homepage, login, orders, admin panel)
+
+👨‍💻 Author
+
+Zeel Sadariya
+
+GitHub: https://github.com/Zeel555
+
+Project Repo: https://github.com/Zeel555/Pizza-Delight
+
+📜 License
+
+This project is licensed under the MIT License.
+
+⭐ If you like this project, give it a star!
 
 
-{
-  "name": "Zeel Sadariya",
-  "email": "zeelsadariya@gmail.com",
-  "password": "admin123",
-  "role": "superadmin",
-  "permissions": ["ALL"],
-  "isApproved": true, 
-}
-
-admin token 
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUzYWU1MjgxYzdkZTQ2YjViOGU3NyIsImlhdCI6MTc2Nzc4MzI0NCwiZXhwIjoxNzY5MDc5MjQ0fQ.FK0f_8NJoWHbswSyX_8BXfpNKXgANKa7jtbMrNAxJ9s
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NWUzYWU1MjgxYzdkZTQ2YjViOGU3NyIsImlhdCI6MTc2Nzc5MTcyMywiZXhwIjoxNzY5MDg3NzIzfQ.fQ_fA1WU0s4PHvERRpsZ6neL04ne4NRBPsaA1iZSjz8
-
-
-{
-  "name": "Margherita",
-  "description": "Classic cheese pizza",
-  "bases": ["695e605d3095d47cbb34d72a"],
-  "sauces": ["66c1a20ab1e3c9a987654321"],
-  "cheeses": ["66c1a230b1e3c9a111222333"],
-  "veggies": ["66c1a245b1e3c9a444555666"],
-  "price": 199,
-  "size": "medium",
-  "imageUrl": "/images/margherita.png"
-}
-
-bases:
-Thin Crust 695e605d3095d47cbb34d72a
-Cheese Burst 695e61633095d47cbb34d72e
-Classic Hand Tossed 695e622c3095d47cbb34d732
-Whole Wheat Crust 695e62593095d47cbb34d736
-Pan Pizza Crust 695e62713095d47cbb34d73a
-
-sauces:
-Tomato Sauce 695e63b23095d47cbb34d752
-Classic Marinara 695e63bf3095d47cbb34d756
-Barbeque 695e63cf3095d47cbb34d75a
-Pesto 695e63dd3095d47cbb34d75e
-Spicy Peri Peri 695e63e83095d47cbb34d762
-
-cheeses:
-Mozzarella 695e63163095d47cbb34d73e
-Cheddar 695e632b3095d47cbb34d742
-Parmesan 695e633c3095d47cbb34d746
-Provolone 695e634b3095d47cbb34d74a
-Four Cheese Blend 695e635b3095d47cbb34d74e
-
-veggies:
-Onion 695e64003095d47cbb34d766
-Capsicum 695e640e3095d47cbb34d76a
-Tomato 695e64233095d47cbb34d76e
-Black Olives 695e64343095d47cbb34d772
-Sweet Corn 695e644c3095d47cbb34d776
-Jalapeno 695e64613095d47cbb34d77a
-Mushroom 695e64723095d47cbb34d77e
-
-{
-  "name": "Margherita",
-  "description": "Classic cheese pizza",
-  "bases": ["695e605d3095d47cbb34d72a"],
-  "sauces": ["695e63b23095d47cbb34d752"],
-  "cheeses": ["695e63163095d47cbb34d73e"],
-  "veggies": [],
-  "price": 199,
-  "size": "medium",
-  "imageUrl": "/images/margherita.png"
-}
+---
