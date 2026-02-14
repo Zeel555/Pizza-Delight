@@ -189,3 +189,24 @@ Give ⭐️ if you like this project!
 [issues-url]: https://github.com/itxsaaad/pizza-palette-app-mern-OIBSIP-task-1/issues
 [license-shield]: https://img.shields.io/github/license/itxsaaad/pizza-palette-app-mern-OIBSIP-task-1.svg?style=for-the-badge
 [license-url]: https://github.com/itxsaaad/pizza-palette-app-mern-OIBSIP-task-1/blob/main/LICENSE.md
+
+## Deployment (Vercel)
+
+ - Do NOT commit secrets to the repository. Use Vercel Environment Variables.
+ - Required server envs:
+    - `GMAIL_USER` — your Gmail address (for App Passwords)
+    - `GMAIL_APP_PASSWORD` — Google App Password (requires 2FA)
+    - `SENDER_EMAIL` — email address that appears in `from`
+    - `JWT_SECRET`, `MONGO_URI`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` as needed
+
+ Add envs in the Vercel dashboard (Project → Settings → Environment Variables) or with Vercel CLI:
+
+```bash
+vercel env add GMAIL_USER production
+vercel env add GMAIL_APP_PASSWORD production
+vercel env add SENDER_EMAIL production
+```
+
+After setting envs, redeploy the project. Monitor the server logs in Vercel for email send attempts. If you previously exposed any keys (like `SENDER_PASSWORD` or `SMTP_PASS`), rotate those credentials immediately.
+
+If you want, I can create a short `DEPLOYMENT.md` with step-by-step screenshots or add CI instructions.
